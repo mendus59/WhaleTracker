@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { fetchAll } from '../sources';
+import { loadSightings, type LoadResult } from '../sources';
 import { dedupe } from '../lib/filters';
 import type { Sighting, SourceResult } from '../types';
 
@@ -13,6 +13,7 @@ export function useSightings(since: number) {
   const [sightings, setSightings] = useState<Sighting[]>([]);
   const [results, setResults] = useState<SourceResult[]>([]);
   const [loading, setLoading] = useState(false);
+  const [info, setInfo] = useState<Omit<LoadResult, 'results'>>({ mode: 'live' });
   const loadedSince = useRef<number>(Infinity);
   const abort = useRef<AbortController | null>(null);
 
@@ -22,10 +23,11 @@ export function useSightings(since: number) {
     abort.current = ctl;
     setLoading(true);
     try {
-      const res = await fetchAll(from, ctl.signal);
+      const { results: res, ...meta } = await loadSightings(from, ctl.signal);
       if (ctl.signal.aborted) return;
       loadedSince.current = from;
       setResults(res);
+      setInfo(meta);
       setSightings(dedupe(res.flatMap((r) => r.sightings)));
     } finally {
       if (!ctl.signal.aborted) setLoading(false);
@@ -41,5 +43,5 @@ export function useSightings(since: number) {
     return () => clearInterval(t);
   }, [load, since]);
 
-  return { sightings, results, loading, reload: () => load(Math.min(since, loadedSince.current)) };
+  return { sightings, results, info, loading, reload: () => load(Math.min(since, loadedSince.current)) };
 }

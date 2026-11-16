@@ -2,6 +2,7 @@ import type { SourceId, SourceResult } from '../types';
 import { fetchAcartia } from './acartia';
 import { fetchINaturalist } from './inaturalist';
 import { fetchObis } from './obis';
+import { fetchArchive } from './archive';
 
 export const SOURCES: Record<SourceId, { label: string; kind: string; homepage: string; license: string }> = {
   acartia: {
@@ -42,4 +43,43 @@ export async function fetchAll(since: number, signal?: AbortSignal): Promise<Sou
       }
     }),
   );
+}
+
+export interface LoadResult {
+  results: SourceResult[];
+  /** 'archive' = saved history in Firestore (+ live Acartia); 'live' = straight from the sources. */
+  mode: 'archive' | 'live';
+  archiveCount?: number;
+  archiveError?: string;
+}
+
+/**
+ * Prefer the Firestore archive (full history, one fast query). Top it up with
+ * the live Acartia feed so reports since the last ingest run still appear.
+ * If the archive is unavailable or empty, fetch everything live.
+ */
+export async function loadSightings(since: number, signal?: AbortSignal): Promise<LoadResult> {
+  let archiveError: string | undefined;
+  try {
+    const saved = await fetchArchive(since);
+    if (saved.length) {
+      let live: SourceResult;
+      try {
+        live = { source: 'acartia', sightings: await fetchAcartia(signal), fetchedAt: Date.now() };
+      } catch (e) {
+        live = { source: 'acartia', sightings: [], error: e instanceof Error ? e.message : String(e), fetchedAt: Date.now() };
+      }
+      const bySource = (id: SourceId) => saved.filter((s) => s.source === id);
+      const results: SourceResult[] = (['acartia', 'inaturalist', 'obis'] as SourceId[]).map((id) => ({
+        source: id,
+        sightings: id === 'acartia' ? [...bySource(id), ...live.sightings] : bySource(id),
+        error: id === 'acartia' ? live.error : undefined,
+        fetchedAt: Date.now(),
+      }));
+      return { results, mode: 'archive', archiveCount: saved.length };
+    }
+  } catch (e) {
+    archiveError = e instanceof Error ? e.message : String(e);
+  }
+  return { results: await fetchAll(since, signal), mode: 'live', archiveError };
 }

@@ -1,12 +1,28 @@
 import { SOURCES } from '../sources';
 import type { SourceResult } from '../types';
+import type { LoadResult } from '../sources';
 
-export function SourcesStatus({ results, loading, onReload }: { results: SourceResult[]; loading: boolean; onReload: () => void }) {
+export function SourcesStatus({
+  results,
+  info,
+  loading,
+  onReload,
+}: {
+  results: SourceResult[];
+  info: Omit<LoadResult, 'results'>;
+  loading: boolean;
+  onReload: () => void;
+}) {
   return (
     <details className="sources">
       <summary>
         Data sources {loading ? '· loading…' : results.some((r) => r.error) ? '· some unavailable' : ''}
       </summary>
+      <p className="muted small">
+        {info.mode === 'archive'
+          ? `From the saved archive (${info.archiveCount} sightings), plus live Acartia reports.`
+          : `Fetched live from each source${info.archiveError ? ' (archive unavailable)' : ''}.`}
+      </p>
       <ul>
         {results.map((r) => (
           <li key={r.source}>

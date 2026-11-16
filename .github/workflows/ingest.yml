@@ -1,0 +1,59 @@
+name: Ingest sightings
+on:
+  schedule:
+    # Fresh reports every 10 minutes (GitHub may delay scheduled runs at busy times).
+    - cron: '*/10 * * * *'
+    # Scientific datasets (OBIS) change slowly: once a day, looking back 4 months.
+    - cron: '17 9 * * *'
+  workflow_dispatch:
+    inputs:
+      days:
+        description: 'How many days back to collect (1825 = 5-year backfill)'
+        default: '1825'
+      sources:
+        description: 'Comma-separated: acartia,inaturalist,obis'
+        default: 'acartia,inaturalist,obis'
+
+concurrency:
+  group: ingest
+  cancel-in-progress: false
+
+jobs:
+  ingest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Check for the Firebase service account secret
+        id: secret
+        env:
+          SA: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        run: |
+          if [ -z "$SA" ]; then
+            echo "::notice::FIREBASE_SERVICE_ACCOUNT secret is not set yet; skipping. See README > Sightings archive."
+            echo "ok=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "ok=true" >> "$GITHUB_OUTPUT"
+          fi
+      - uses: actions/checkout@v4
+        if: steps.secret.outputs.ok == 'true'
+      - uses: actions/setup-node@v4
+        if: steps.secret.outputs.ok == 'true'
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+        if: steps.secret.outputs.ok == 'true'
+      - name: Collect and save sightings
+        if: steps.secret.outputs.ok == 'true'
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            ARGS="--days ${{ inputs.days }} --sources ${{ inputs.sources }}"
+          elif [ "${{ github.event.schedule }}" = "17 9 * * *" ]; then
+            ARGS="--days 120 --sources obis,inaturalist"
+          else
+            ARGS="--days 2 --sources acartia,inaturalist"
+          fi
+          echo "Running: ingest $ARGS"
+          npx tsx scripts/ingest.ts $ARGS

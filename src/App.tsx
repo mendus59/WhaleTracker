@@ -43,7 +43,7 @@ export default function App() {
   }, []);
 
   const start = now - recencyMs(filters.recency);
-  const { sightings: all, results, loading, reload } = useSightings(start);
+  const { sightings: all, results, info, loading, reload } = useSightings(start);
 
   const filtered = useMemo(() => applyFilters(all, filters, now), [all, filters, now]);
   const visible = useMemo(() => {
@@ -108,7 +108,7 @@ export default function App() {
             />
           )}
           {!user && <p className="muted small hint">Sign in to follow specific whales and keep your filters.</p>}
-          <SourcesStatus results={results} loading={loading} onReload={reload} />
+          <SourcesStatus results={results} info={info} loading={loading} onReload={reload} />
         </aside>
         <div className="map-wrap">
           <SightingMap
