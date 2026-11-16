@@ -23,6 +23,18 @@ export default function App() {
   const [windowMs, setWindowMs] = useState(24 * 3600e3);
   const [playing, setPlaying] = useState(false);
   const [selected, setSelected] = useState<Sighting>();
+  const [selectedTrackId, setSelectedTrackId] = useState<string>();
+  const [focusNonce, setFocusNonce] = useState(0);
+  const selectSighting = (s?: Sighting, fromList = false) => {
+    setSelected(s);
+    setSelectedTrackId(undefined);
+    if (fromList) setFocusNonce((n) => n + 1);
+  };
+  const selectTrack = (lastId?: string) => {
+    setSelectedTrackId(lastId);
+    setSelected(undefined); // highlight the whole track; a popup would cover it
+    setFocusNonce((n) => n + 1);
+  };
   const [panel, setPanel] = useState<'list' | 'filters'>('list');
 
   // Restore a signed-in user's saved filters once.
@@ -102,7 +114,9 @@ export default function App() {
               sightings={visible}
               predictions={predictions}
               selected={selected}
-              onSelect={setSelected}
+              selectedTrackId={selectedTrackId}
+              onSelect={(s) => selectSighting(s, true)}
+              onSelectTrack={selectTrack}
               favorites={prefs.favorites}
               onToggleFavorite={user ? toggleFavorite : undefined}
             />
@@ -118,8 +132,16 @@ export default function App() {
             cursor={cursor}
             fadeOverMs={mode === 'window' ? windowMs : Math.max(now - start, 1)}
             selected={selected}
-            onSelect={setSelected}
+            selectedTrackId={selectedTrackId}
+            focusNonce={focusNonce}
+            onSelect={(s) => selectSighting(s)}
+            onSelectTrack={selectTrack}
           />
+          {(selected || selectedTrackId) && (
+            <button className="clear-sel" onClick={() => selectSighting(undefined)}>
+              ✕ Clear selection
+            </button>
+          )}
           {loading && all.length === 0 && <div className="loading">Loading sightings…</div>}
         </div>
       </main>

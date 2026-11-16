@@ -95,7 +95,11 @@ label.check { display: flex !important; align-items: center; gap: 6px; }
 .fav.on { border-color: #f59e0b; color: #b45309; }
 .predictions { margin-top: 8px; padding: 8px; border-radius: 10px; background: color-mix(in srgb, #e11d48 8%, transparent); }
 .predictions h3 { margin-top: 0; color: #be123c; }
-.pred { font-size: .85rem; padding: 2px 0; }
+.pred { display: block; width: 100%; text-align: left; font-size: .85rem; padding: 6px 8px; margin: 2px 0; background: none; border: 1px solid transparent; border-radius: 8px; cursor: pointer; }
+.pred:hover { background: color-mix(in srgb, #e11d48 10%, transparent); }
+.pred.on { border-color: #e11d48; background: color-mix(in srgb, #e11d48 14%, transparent); }
+.clear-sel { position: absolute; top: 12px; right: 12px; z-index: 500; background: var(--panel); color: var(--text); border: 1px solid var(--line); border-radius: 999px; padding: 6px 12px; cursor: pointer; box-shadow: 0 2px 8px #0003; }
+.list li.sel { box-shadow: inset 3px 0 0 #e11d48; }
 
 .sources { margin-top: 12px; font-size: .9rem; }
 .sources summary { cursor: pointer; color: var(--muted); }
@@ -104,6 +108,7 @@ label.check { display: flex !important; align-items: center; gap: 6px; }
 .details { display: grid; gap: 4px; max-width: 260px; font-size: .85rem; }
 .details img { width: 100%; border-radius: 6px; }
 .details .comments { margin: 0; white-space: pre-line; }
+.details .tag { justify-self: start; }
 .tag { display: inline-block; margin-left: 6px; font-size: .7rem; padding: 1px 6px; border-radius: 999px; background: #e0f2fe; color: #075985; }
 .tag.ok { background: #dcfce7; color: var(--ok); }
 
