@@ -64,10 +64,11 @@ export function normalizeObis(r: ObisRecord): Sighting | null {
   };
 }
 
-export async function fetchObis(since: number, signal?: AbortSignal): Promise<Sighting[]> {
+export async function fetchObis(since: number, signal?: AbortSignal, opts: { maxPages?: number } = {}): Promise<Sighting[]> {
+  const maxPages = opts.maxPages ?? MAX_PAGES;
   const out: Sighting[] = [];
   let after: string | undefined;
-  for (let page = 0; page < MAX_PAGES; page++) {
+  for (let page = 0; page < maxPages; page++) {
     const p = new URLSearchParams({
       taxonid: String(CETACEA_APHIA_ID),
       geometry: REGION_WKT,

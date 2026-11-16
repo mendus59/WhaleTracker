@@ -72,10 +72,11 @@ export function inatUrl(sinceIso: string, page: number): string {
   return `${BASE}?${p}`;
 }
 
-export async function fetchINaturalist(since: number, signal?: AbortSignal): Promise<Sighting[]> {
+export async function fetchINaturalist(since: number, signal?: AbortSignal, opts: { maxPages?: number } = {}): Promise<Sighting[]> {
+  const maxPages = opts.maxPages ?? MAX_PAGES;
   const out: Sighting[] = [];
   const sinceIso = new Date(since).toISOString();
-  for (let page = 1; page <= MAX_PAGES; page++) {
+  for (let page = 1; page <= maxPages; page++) {
     const res = await fetch(inatUrl(sinceIso, page), { signal });
     if (!res.ok) throw new Error(`iNaturalist HTTP ${res.status}`);
     const body = await res.json();

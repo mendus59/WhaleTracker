@@ -41,7 +41,7 @@ usually name the animals.
   1–3 h ahead with a confidence score; hidden when the animals are milling or the
   track is stale.
 
-## Phase 2: own the data (needs a decision on Firebase billing)
+## Phase 2: own the data (decided: GitHub Actions)
 
 Browser-side fetching can't keep history beyond Acartia's 7 days, can't send push
 notifications, and makes every visitor download OBIS pages. Next step is a

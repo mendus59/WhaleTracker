@@ -35,6 +35,29 @@ Put local overrides in `.env.local`.
    ```
    The site is then at https://whaletracker-c5440.web.app (add that domain to Auth → Settings → Authorized domains if it isn't there).
 
+## Sightings archive (GitHub Actions)
+
+`.github/workflows/ingest.yml` runs `scripts/ingest.ts`, which collects sightings
+from every source and saves them to Firestore `sightings/`. The web app reads that
+archive (so history goes past Acartia's 7-day window) and tops it up with live
+Acartia reports. Without the archive it falls back to fetching each source live.
+
+- Every 10 minutes: Acartia + iNaturalist, last 2 days.
+- Daily: OBIS + iNaturalist, last 120 days.
+- Manual (Actions → Ingest sightings → Run workflow): any range; the default 1825 days is a 5-year backfill.
+
+One-time setup:
+
+1. Firebase console → Project settings → Service accounts → **Generate new private key**.
+2. GitHub repo → Settings → Secrets and variables → Actions → **New repository secret**,
+   name `FIREBASE_SERVICE_ACCOUNT`, value = the whole JSON file. Then delete the downloaded file.
+3. Run the workflow once by hand for the backfill.
+
+Until the secret exists, scheduled runs skip with a notice. GitHub pauses scheduled
+workflows after 60 days without commits; re-enable from the Actions tab if that happens.
+
+Try it locally without writing: `npx tsx scripts/ingest.ts --dry-run --days 7`.
+
 ## Data and etiquette
 
 Sightings stay the property of their sources; each record links back to the
