@@ -1,5 +1,7 @@
 # WhaleTracker
 
+**Live site:** https://mendus59.github.io/WhaleTracker/
+
 Live map of whale and orca sightings around Puget Sound, from public reports
 (Orca Network, Whale Alert and partners via [Acartia](https://acartia.io)),
 [iNaturalist](https://www.inaturalist.org) and scientific datasets in
@@ -24,9 +26,15 @@ npm run build   # type-check + production build into dist/
 Firebase web config lives in `.env` (public client identifiers, safe to commit).
 Put local overrides in `.env.local`.
 
+## Hosting
+
+Every push to `main` builds and deploys to GitHub Pages (`.github/workflows/pages.yml`).
+Repo Settings → Pages → Source must be **GitHub Actions**.
+
 ## Firebase setup (one time)
 
 1. Firebase console → Authentication → Sign-in method: enable **Google** and **Email/Password**.
+   Authentication → Settings → Authorized domains: add `mendus59.github.io`.
 2. Firebase console → Firestore Database → create a database (production mode).
 3. Deploy rules and hosting:
    ```bash
