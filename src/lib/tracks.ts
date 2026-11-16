@@ -26,6 +26,8 @@ export interface Prediction {
   confidence: number;
   basedOn: number;
   lastSeen: number;
+  /** Id of the track's most recent sighting (stable across re-renders). */
+  lastId: string;
 }
 
 /** What "the same animals" means: named pod/individuals if any, otherwise species + ecotype. */
@@ -138,6 +140,7 @@ export function predictTrack(track: Track, now: number, maxAgeH = 6): Prediction
     confidence,
     basedOn: legs.length,
     lastSeen: last.time,
+    lastId: last.id,
   };
 }
 

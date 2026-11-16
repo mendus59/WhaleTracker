@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react';
 import { SPECIES } from '../lib/species';
 import { formatTime, timeAgo } from '../lib/format';
 import { compassPoint, type Prediction } from '../lib/tracks';
@@ -8,24 +9,37 @@ interface Props {
   sightings: Sighting[];
   predictions: Prediction[];
   selected?: Sighting;
+  selectedTrackId?: string;
   onSelect: (s: Sighting) => void;
+  onSelectTrack: (lastId: string) => void;
   favorites: string[];
   onToggleFavorite?: (id: string) => void;
 }
 
 const LIMIT = 300;
 
-export function SightingList({ sightings, predictions, selected, onSelect, favorites, onToggleFavorite }: Props) {
+export function SightingList({ sightings, predictions, selected, selectedTrackId, onSelect, onSelectTrack, favorites, onToggleFavorite }: Props) {
+  const listRef = useRef<HTMLUListElement>(null);
+  // When a marker is clicked on the map, scroll its list entry into view.
+  useEffect(() => {
+    if (!selected) return;
+    listRef.current?.querySelector(`[data-id="${CSS.escape(selected.id)}"]`)?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+  }, [selected]);
   return (
     <section className="list" aria-label="Sightings">
       {predictions.length > 0 && (
         <div className="predictions">
           <h3>Moving now</h3>
           {predictions.map((p) => (
-            <div key={p.trackKey} className="pred">
+            <button
+              key={p.trackKey}
+              className={`pred ${selectedTrackId === p.lastId ? 'on' : ''}`}
+              onClick={() => onSelectTrack(p.lastId)}
+              aria-pressed={selectedTrackId === p.lastId}
+            >
               <b>{p.label}</b> heading {compassPoint(p.bearing)} ~{p.speedKmh} km/h
-              <span className="muted"> · {Math.round(p.confidence * 100)}% conf.</span>
-            </div>
+              <span className="muted"> · {Math.round(p.confidence * 100)}% conf. · seen {timeAgo(p.lastSeen)}</span>
+            </button>
           ))}
         </div>
       )}
@@ -33,9 +47,9 @@ export function SightingList({ sightings, predictions, selected, onSelect, favor
         {sightings.length} sighting{sightings.length === 1 ? '' : 's'}
       </h3>
       {sightings.length === 0 && <p className="muted">No sightings match. Try a longer time range or fewer filters.</p>}
-      <ul>
+      <ul ref={listRef}>
         {sightings.slice(0, LIMIT).map((s) => (
-          <li key={s.id} className={selected?.id === s.id ? 'sel' : ''}>
+          <li key={s.id} data-id={s.id} className={selected?.id === s.id ? 'sel' : ''}>
             <button className="item" onClick={() => onSelect(s)}>
               <i className="dot" style={{ background: SPECIES[s.species].color }} />
               <span className="item-main">
