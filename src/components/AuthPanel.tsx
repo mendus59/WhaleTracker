@@ -7,7 +7,12 @@ import {
   signOut,
   type User,
 } from 'firebase/auth';
+import { Capacitor } from '@capacitor/core';
 import { auth } from '../config/firebase';
+
+// Google's sign-in popup is blocked inside the Android WebView; native Google
+// sign-in needs a separate plugin, so the app offers email sign-in for now.
+const canUseGooglePopup = !Capacitor.isNativePlatform();
 
 export function AuthPanel({ user }: { user: User | null }) {
   const [open, setOpen] = useState(false);
@@ -50,10 +55,14 @@ export function AuthPanel({ user }: { user: User | null }) {
       </button>
       {open && (
         <div className="auth-pop" role="dialog" aria-label="Sign in">
-          <button className="btn wide" disabled={busy} onClick={() => run(() => signInWithPopup(auth, new GoogleAuthProvider()))}>
-            Continue with Google
-          </button>
-          <div className="or">or</div>
+          {canUseGooglePopup && (
+            <>
+              <button className="btn wide" disabled={busy} onClick={() => run(() => signInWithPopup(auth, new GoogleAuthProvider()))}>
+                Continue with Google
+              </button>
+              <div className="or">or</div>
+            </>
+          )}
           <form
             onSubmit={(e) => {
               e.preventDefault();

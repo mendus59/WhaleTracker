@@ -1,0 +1,86 @@
+name: Android APK
+on:
+  push:
+    branches: [main]
+    paths: ['src/**', 'android/**', 'index.html', 'package.json', 'package-lock.json', 'capacitor.config.ts', 'vite.config.ts', '.env', '.github/workflows/android.yml']
+  pull_request:
+    paths: ['src/**', 'android/**', 'index.html', 'package.json', 'package-lock.json', 'capacitor.config.ts', 'vite.config.ts', '.env', '.github/workflows/android.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: android-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+          cache: gradle
+
+      - name: Version
+        id: v
+        run: |
+          BASE=$(node -p "require('./package.json').version.split('.').slice(0,2).join('.')")
+          echo "name=$BASE.${{ github.run_number }}" >> "$GITHUB_OUTPUT"
+          echo "code=${{ github.run_number }}" >> "$GITHUB_OUTPUT"
+
+      - run: npm ci
+      - run: npm run build
+      - run: npx cap sync android
+
+      - name: Load signing key
+        id: key
+        env:
+          KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+        run: |
+          if [ -n "$KEYSTORE_B64" ]; then
+            echo "$KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/release.jks"
+            echo "ANDROID_KEYSTORE_FILE=$RUNNER_TEMP/release.jks" >> "$GITHUB_ENV"
+            echo "signed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "::notice::ANDROID_KEYSTORE_BASE64 not set; building a debug-signed APK and skipping the release."
+            echo "signed=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Build APK
+        working-directory: android
+        env:
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleRelease --no-daemon -PversionCode=${{ steps.v.outputs.code }} -PversionName=${{ steps.v.outputs.name }}
+          mkdir -p ../out
+          cp app/build/outputs/apk/release/app-release.apk "../out/WhaleTracker-v${{ steps.v.outputs.name }}.apk"
+          cp app/build/outputs/apk/release/app-release.apk ../out/WhaleTracker.apk
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: WhaleTracker-v${{ steps.v.outputs.name }}
+          path: out/WhaleTracker-v${{ steps.v.outputs.name }}.apk
+
+      - name: Publish release
+        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main' && steps.key.outputs.signed == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          V=${{ steps.v.outputs.name }}
+          gh release create "v$V" out/WhaleTracker-v$V.apk out/WhaleTracker.apk \
+            --target "${{ github.sha }}" --title "WhaleTracker $V" --latest \
+            --notes "Android build $V (versionCode ${{ steps.v.outputs.code }}).
+
+          Always-latest download: https://github.com/${{ github.repository }}/releases/latest/download/WhaleTracker.apk"
