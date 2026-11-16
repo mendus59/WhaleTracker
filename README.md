@@ -1,6 +1,7 @@
 # WhaleTracker
 
-**Live site:** https://mendus59.github.io/WhaleTracker/
+**Live site:** https://mendus59.github.io/WhaleTracker/  
+**Android app:** https://github.com/mendus59/WhaleTracker/releases/latest/download/WhaleTracker.apk
 
 Live map of whale and orca sightings around Puget Sound, from public reports
 (Orca Network, Whale Alert and partners via [Acartia](https://acartia.io)),
@@ -30,6 +31,27 @@ Put local overrides in `.env.local`.
 
 Every push to `main` builds and deploys to GitHub Pages (`.github/workflows/pages.yml`).
 Repo Settings → Pages → Source must be **GitHub Actions**.
+
+## Android app
+
+The web app is wrapped with [Capacitor](https://capacitorjs.com) (`android/`).
+`.github/workflows/android.yml` builds a signed APK on every change to `main` and
+publishes a GitHub Release `vX.Y.N` (X.Y from `package.json`, N = build number) with:
+
+- `WhaleTracker-vX.Y.N.apk`: the versioned file
+- `WhaleTracker.apk`: same build, fixed name, so this link always serves the newest:
+  `https://github.com/mendus59/WhaleTracker/releases/latest/download/WhaleTracker.apk`
+
+Pull requests build a debug-signed APK as a workflow artifact, without releasing.
+Releases need four repo secrets: `ANDROID_KEYSTORE_BASE64`, `ANDROID_KEYSTORE_PASSWORD`,
+`ANDROID_KEY_ALIAS`, `ANDROID_KEY_PASSWORD`. Keep the keystore backed up: every
+version must be signed with the same key to install as an update.
+
+To bump the major/minor version, change `version` in `package.json`.
+Local build: `npm run android:sync`, then open `android/` in Android Studio.
+
+Google sign-in isn't offered in the app yet (Google blocks its popup inside
+app WebViews); email sign-in works.
 
 ## Firebase setup (one time)
 
