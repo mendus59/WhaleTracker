@@ -72,6 +72,7 @@ jobs:
         with:
           name: WhaleTracker-v${{ steps.v.outputs.name }}
           path: out/WhaleTracker-v${{ steps.v.outputs.name }}.apk
+          retention-days: 7
 
       - name: Publish release
         if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main' && steps.key.outputs.signed == 'true'
