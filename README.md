@@ -1,5 +1,19 @@
 # WhaleTracker
 
+<!-- site-summary:start -->
+<!-- This section is this project's card on https://mendus59.github.io and is copied there daily.
+     Keep it true of what's on main: one plain-text summary line (max 160 characters), then 1-6 short bullets.
+     See CLAUDE.md ("Site summary"). -->
+Live map of whale and orca sightings around Puget Sound, from public sighting reports, iNaturalist and scientific datasets.
+
+- See sightings from Orca Network, Whale Alert and partners (via Acartia), iNaturalist and OBIS on one map.
+- Filter by time range, species, orca ecotype, pod or individual (J pod, J35, T65A and more), and source.
+- Scrub or play a timeline, in cumulative or moving-window mode.
+- See linked tracks and a simple 3-hour movement prediction for groups on the move.
+- Click a sighting or moving group to zoom to it and highlight it.
+- Sign in with Google or email to follow whales and keep your filters.
+<!-- site-summary:end -->
+
 **Live site:** https://mendus59.github.io/WhaleTracker/  
 **Android app:** https://github.com/mendus59/WhaleTracker/releases/latest/download/WhaleTracker.apk
 
