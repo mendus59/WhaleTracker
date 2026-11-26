@@ -14,6 +14,9 @@ Live map of whale and orca sightings around Puget Sound, from public sighting re
 - Sign in with Google or email to follow whales and keep your filters.
 <!-- site-summary:end -->
 
+<!-- site-screenshot: docs/screenshot.jpg -->
+![Screenshot of WhaleTracker](docs/screenshot.jpg)
+
 **Live site:** https://mendus59.github.io/WhaleTracker/  
 **Android app:** https://github.com/mendus59/WhaleTracker/releases/latest/download/WhaleTracker.apk
 
